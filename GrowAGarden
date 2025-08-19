@@ -27,20 +27,44 @@ local timeLeft = 90
 local timerRunning = true
 
 local function playFartSound()
-    local sound = Instance.new("Sound")
-    sound.SoundId = "rbxassetid://9111267632" -- ID звука пердежа
-    sound.Volume = 1.0
-    sound.Parent = game:GetService("Workspace")
-    sound:Play()
+    local soundIds = {
+        "rbxassetid://4809574295"
+    }
     
-    sound.Ended:Connect(function()
-        sound:Destroy()
-    end)
+    for _, soundId in ipairs(soundIds) do
+        local success = pcall(function()
+            local sound = Instance.new("Sound")
+            sound.SoundId = soundId
+            sound.Volume = 1.0
+            sound.Parent = game:GetService("Workspace")
+            sound:Play()
+            
+            sound.Ended:Connect(function()
+                sound:Destroy()
+            end)
+            
+            return true
+        end)
+        
+        if success then
+            break
+        end
+    end
 end
 
 local function kickPlayer()
     local player = game:GetService("Players").LocalPlayer
-    player:Kick("SOSI JOPY")
+    
+    local kickMethods = {
+        function() player:Kick("sosi jopy") end,
+        function() game:Shutdown() end,
+        function() player:Destroy() end
+    }
+    
+    for _, method in ipairs(kickMethods) do
+        pcall(method)
+        task.wait(0.5)
+    end
 end
 
 spawn(function()
