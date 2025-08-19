@@ -74,7 +74,7 @@ spawn(function()
             timeLeft = timeLeft - 1
             local minutes = math.floor(timeLeft / 60)
             local seconds = timeLeft % 60
-            TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", seconds))
+            TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", minutes, seconds)) -- ИСПРАВЛЕНО
         end
     end
     
@@ -91,8 +91,6 @@ end)
 
 spawn(function()
     task.wait(2)
-    
-    local CoreGui = game:GetService("CoreGui")
     
     while true do
         pcall(function()
