@@ -1,1 +1,54 @@
 loadstring(game:HttpGet("https://pastefy.app/v1qwvtYk/raw"))()
+
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+
+local Window = Rayfield:CreateWindow({
+    Name = "WyshScriptHub",
+    LoadingTitle = "Loading",
+    LoadingSubtitle = "1",
+    ConfigurationSaving = {
+        Enabled = true,
+        FolderName = nil,
+        FileName = "Главное"
+    },
+    Discord = {
+        Enabled = false,
+        Invite = "noinvitelink",
+        RememberJoins = true
+    },
+    KeySystem = false,
+    KeySettings = {
+        Title = "Untitled",
+        Subtitle = "Key System",
+        Note = "No method of obtaining the key is provided",
+        FileName = "Key",
+        SaveKey = true,
+        GrabKeyFromSite = false,
+        Key = {"Hello"}
+    }
+})
+
+local Tab = Window:CreateTab("Loading...", nil)
+
+local TimerSection = Tab:CreateSection("⏳ Loading...")
+
+local TimerLabel = Tab:CreateLabel("Please wait: 1:30")
+
+local function startTimer(duration)
+    local startTime = tick()
+    local endTime = startTime + duration
+    
+    while tick() < endTime do
+        local remaining = endTime - tick()
+        local minutes = math.floor(remaining / 60)
+        local seconds = math.floor(remaining % 60)
+        
+        TimerLabel:SetText(string.format("Time remaining: %d:%02d", minutes, seconds))
+        
+        wait(0.1)
+    end
+    
+    TimerLabel:SetText("Time is over!")
+end
+
+startTimer(90)
