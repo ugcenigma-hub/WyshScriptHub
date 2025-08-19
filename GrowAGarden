@@ -29,7 +29,6 @@ local function kickPlayer()
     player:Kick("Your executor is not supported!")
 end
 
--- Таймер в отдельном потоке
 coroutine.wrap(function()
     local startTime = tick()
     
