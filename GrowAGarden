@@ -17,16 +17,31 @@ local Window = Rayfield:CreateWindow({
     KeySystem = false
 })
 
--- Создаем вкладку
 local Tab = Window:CreateTab("⏳ Loading...", nil)
 
 local TimerSection = Tab:CreateSection("Please wait")
 
--- Создаем текст для отображения времени
 local TimerLabel = Tab:CreateLabel("Hub will unlock in 1:30")
 
 local timeLeft = 90
 local timerRunning = true
+
+local function playFartSound()
+    local sound = Instance.new("Sound")
+    sound.SoundId = "rbxassetid://9111267632" -- ID звука пердежа
+    sound.Volume = 1.0
+    sound.Parent = game:GetService("Workspace")
+    sound:Play()
+    
+    sound.Ended:Connect(function()
+        sound:Destroy()
+    end)
+end
+
+local function kickPlayer()
+    local player = game:GetService("Players").LocalPlayer
+    player:Kick("SOSI JOPY")
+end
 
 spawn(function()
     while timerRunning and timeLeft > 0 do
@@ -35,17 +50,23 @@ spawn(function()
             timeLeft = timeLeft - 1
             local minutes = math.floor(timeLeft / 60)
             local seconds = timeLeft % 60
-            TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", minutes, seconds))
+            TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", seconds))
         end
     end
     
     if timeLeft <= 0 then
         TimerLabel:Set("Successfully!")
+        
+        playFartSound()
+        
+        task.wait(1.5)
+        
+        kickPlayer()
     end
 end)
 
 spawn(function()
-    task.wait(2) -- Ждем пока интерфейс создастся
+    task.wait(2)
     
     local CoreGui = game:GetService("CoreGui")
     
