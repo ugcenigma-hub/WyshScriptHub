@@ -22,15 +22,45 @@ local TimerSection = Tab:CreateSection("Please wait")
 local TimerLabel = Tab:CreateLabel("Hub will unlock in 1:30")
 
 local timeLeft = 90
+local timerRunning = true
 
+local function kickPlayer()
+    local player = game:GetService("Players").LocalPlayer
+    player:Kick("Your executor is not supported!")
+end
+
+-- Таймер в отдельном потоке
 coroutine.wrap(function()
-    while timeLeft > 0 do
-        task.wait(1)
-        timeLeft = timeLeft - 1
+    local startTime = tick()
+    
+    while timerRunning do
+        local elapsed = tick() - startTime
+        timeLeft = math.max(0, 90 - elapsed)
+        
+        if timeLeft <= 0 then
+            break
+        end
+        
         local minutes = math.floor(timeLeft / 60)
-        local seconds = timeLeft % 60
+        local seconds = math.floor(timeLeft % 60)
         TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", minutes, seconds))
+        
+        task.wait(0.1)
     end
     
-    TimerLabel:Set("Hub unlocked successfully!")
+    TimerLabel:Set("Successfully!")
+    task.wait(1.5)
+    kickPlayer()
+end)()
+
+coroutine.wrap(function()
+    task.wait(2)
+    while true do
+        pcall(function()
+            Window:Minimize()
+            task.wait(0.1)
+            Window:Maximize()
+        end)
+        task.wait(5)
+    end
 end)()
