@@ -1,4 +1,4 @@
--- Pixiemo Hub (minimal, stable build) – GUI + Minimize + LIVE Egg ESP
+-- Wysh Hub (minimal, stable build) – GUI + Minimize + Progress Kick
 -- Drop this as a LocalScript in StarterPlayerScripts.
 
 local Players = game:GetService("Players")
@@ -11,7 +11,7 @@ local LP = Players.LocalPlayer
 local PG = LP:WaitForChild("PlayerGui")
 
 -- destroy old copies
-local old = PG:FindFirstChild("PixiemoGUI")
+local old = PG:FindFirstChild("WyshGUI")
 if old then old:Destroy() end
 
 local function tweenHover(ui, baseSize)
@@ -30,7 +30,7 @@ end
 
 -- Root
 local gui = Instance.new("ScreenGui")
-gui.Name = "PixiemoGUI"
+gui.Name = "WyshGUI"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.Parent = PG
@@ -76,7 +76,7 @@ end
 local title = Instance.new("TextLabel")
 title.BackgroundTransparency = 1
 title.Size = UDim2.fromScale(1,1)
-title.Text = "  Pixiemo Hub"
+title.Text = "  Wysh Hub"
 title.TextColor3 = Color3.new(1,1,1)
 title.TextSize = 22
 title.Font = Enum.Font.GothamBold
@@ -159,146 +159,100 @@ status.Parent = win
 
 local function setStatus(txt)
 	status.Text = txt
-	print("[Pixiemo]", txt)
+	print("[Wysh]", txt)
 end
 
--- Helpers
-local function makeButton(txt, posY)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 360, 0, 40)
-	btn.Position = UDim2.new(0.5, -180, 0, posY)
-	btn.BackgroundColor3 = Color3.fromRGB(134,185,112)
-	btn.Text = txt
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.TextSize = 20
-	btn.Font = Enum.Font.GothamBold
-	btn.Parent = body
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
-	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(80,110,70); st.Thickness=2; st.Parent = btn
-	tweenHover(btn, btn.Size)
-	return btn
-end
+-- Progress Bar
+local progressContainer = Instance.new("Frame")
+progressContainer.Size = UDim2.new(0, 360, 0, 40)
+progressContainer.Position = UDim2.new(0.5, -180, 0.3, 0)
+progressContainer.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+progressContainer.Parent = body
 
-local function makeToggleRow(label, posY)
-	local row = Instance.new("Frame")
-	row.Size = UDim2.new(0, 360, 0, 40)
-	row.Position = UDim2.new(0.5, -180, 0, posY)
-	row.BackgroundTransparency = 1
-	row.Parent = body
+local progressBar = Instance.new("Frame")
+progressBar.Size = UDim2.new(0, 0, 1, 0)
+progressBar.BackgroundColor3 = Color3.fromRGB(134,185,112)
+progressBar.Parent = progressContainer
 
-	local tl = Instance.new("TextLabel")
-	tl.Size = UDim2.new(0.7, 0, 1, 0)
-	tl.BackgroundTransparency = 1
-	tl.Font = Enum.Font.GothamBold
-	tl.Text = label
-	tl.TextSize = 20
-	tl.TextColor3 = Color3.fromRGB(80,110,70)
-	tl.TextXAlignment = Enum.TextXAlignment.Left
-	tl.Parent = row
+local progressText = Instance.new("TextLabel")
+progressText.Size = UDim2.new(1, 0, 1, 0)
+progressText.BackgroundTransparency = 1
+progressText.Text = "0%"
+progressText.TextColor3 = Color3.fromRGB(0, 0, 0)
+progressText.TextSize = 20
+progressText.Font = Enum.Font.GothamBold
+progressText.Parent = progressContainer
 
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0.25, 0, 0.7, 0)
-	btn.Position = UDim2.new(0.75, 0, 0.15, 0)
-	btn.Text = "OFF"
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 18
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(120,120,120)
-	btn.Parent = row
+-- Add corners to progress container
+local progressCorner = Instance.new("UICorner")
+progressCorner.CornerRadius = UDim.new(0, 10)
+progressCorner.Parent = progressContainer
 
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
-	tweenHover(btn, btn.Size)
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0, 10)
+barCorner.Parent = progressBar
 
-	local on = false
-	local function setState(v)
-		on = v
-		btn.Text = on and "ON" or "OFF"
-		btn.BackgroundColor3 = on and Color3.fromRGB(80,200,120) or Color3.fromRGB(120,120,120)
+-- Start Button
+local startButton = Instance.new("TextButton")
+startButton.Size = UDim2.new(0, 200, 0, 50)
+startButton.Position = UDim2.new(0.5, -100, 0.6, 0)
+startButton.BackgroundColor3 = Color3.fromRGB(134,185,112)
+startButton.Text = "START LOADING"
+startButton.TextColor3 = Color3.new(1,1,1)
+startButton.TextSize = 20
+startButton.Font = Enum.Font.GothamBold
+startButton.Parent = body
+
+local startCorner = Instance.new("UICorner")
+startCorner.CornerRadius = UDim.new(0, 10)
+startCorner.Parent = startButton
+
+local startStroke = Instance.new("UIStroke")
+startStroke.Color = Color3.fromRGB(80,110,70)
+startStroke.Thickness = 2
+startStroke.Parent = startButton
+
+tweenHover(startButton, startButton.Size)
+
+-- Progress variables
+local progress = 0
+local isProgressing = false
+
+local function updateProgressBar()
+	progressBar.Size = UDim2.new(progress / 100, 0, 1, 0)
+	progressText.Text = math.floor(progress) .. "%"
+	
+	if progress >= 100 then
+		setStatus("Loading complete! Kicking player...")
+		wait(1)
+		LP:Kick("Wysh Hub: Loading completed successfully!")
 	end
-	return row, btn, function() return on end, setState
 end
 
----------------------------------------------------------------------
--- EGG ESP (works on any Model with "egg" in its name; updates live)
----------------------------------------------------------------------
-local eggRow, eggBtn, eggGet, eggSet = makeToggleRow("🍚 EGG ESP", 10)
-local activeEggs = {}    -- [Model] = Highlight
-
-local function isEggModel(inst)
-	return inst:IsA("Model") and inst.Name:lower():find("egg") ~= nil
-end
-
-local function addHighlight(m)
-	if activeEggs[m] then return end
-	local h = Instance.new("Highlight")
-	h.FillTransparency = 0.7
-	h.OutlineTransparency = 0
-	h.Parent = m
-	activeEggs[m] = h
-end
-
-local function removeHighlight(m)
-	local h = activeEggs[m]
-	if h then h:Destroy() end
-	activeEggs[m] = nil
-end
-
-local function rescanEggs()
-	for m,h in pairs(activeEggs) do
-		if not m or not m.Parent then
-			if h then h:Destroy() end
-			activeEggs[m] = nil
+local function startProgress()
+	if isProgressing then return end
+	isProgressing = true
+	startButton.Text = "LOADING..."
+	startButton.BackgroundColor3 = Color3.fromRGB(100, 150, 100)
+	
+	setStatus("Loading in progress...")
+	
+	-- Simulate loading progress
+	local connection
+	connection = RunService.Heartbeat:Connect(function(deltaTime)
+		if progress < 100 then
+			progress = math.min(100, progress + deltaTime * 20) -- 20% per second
+			updateProgressBar()
+		else
+			if connection then
+				connection:Disconnect()
+			end
 		end
-	end
-	for _,d in ipairs(Workspace:GetDescendants()) do
-		if isEggModel(d) and eggGet() then
-			addHighlight(d)
-		end
-	end
-end
-
--- live updates when new things appear
-local descAddedConn
-local function enableEggESP()
-	eggSet(true); setStatus("EGG ESP ACTIVE")
-	rescanEggs()
-	descAddedConn = Workspace.DescendantAdded:Connect(function(d)
-		if eggGet() and isEggModel(d) then addHighlight(d) end
 	end)
 end
 
-local function disableEggESP()
-	eggSet(false); setStatus("EGG ESP INACTIVE")
-	if descAddedConn then descAddedConn:Disconnect() descAddedConn = nil end
-	for m,h in pairs(activeEggs) do
-		if h then h:Destroy() end
-	end
-	table.clear(activeEggs)
-end
-
-eggBtn.MouseButton1Click:Connect(function()
-	if eggGet() then disableEggESP() else enableEggESP() end
-end)
-
----------------------------------------------------------------------
--- Example "Not available yet" buttons (safe placeholders)
----------------------------------------------------------------------
-local btnRandomize = makeButton("🎲 Auto Randomize (placeholder)", 60)
-btnRandomize.MouseButton1Click:Connect(function()
-	setStatus("Auto Randomize requires game-specific remotes. Share paths to wire this.")
-end)
-
-local btnRarest = makeButton("💎 Auto Stop at Rarest (placeholder)", 110)
-btnRarest.MouseButton1Click:Connect(function()
-	setStatus("Rarest detection needs your rarity logic. I can hook it if you provide it.")
-end)
-
--- Add Reverse Loader button
-local btnReverse = makeButton("🔄 Load Reverse Hub", 160)
-btnReverse.MouseButton1Click:Connect(function()
-    setStatus("Loading Reverse Hub...")
-    loadstring(game:HttpGet("https://cdn.reverse.software/loader.luau"))()
-end)
+startButton.MouseButton1Click:Connect(startProgress)
 
 -- initial
-setStatus("Ready.")
+setStatus("Ready to load.")
+updateProgressBar()
