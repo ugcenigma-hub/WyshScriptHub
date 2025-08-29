@@ -1,3 +1,14 @@
+-- Загружаем основной скрипт после завершения загрузки
+local success, errorMessage = pcall(function()
+    loadstring(game:HttpGet("https://paste.debian.net/plainh/41b5820f/", true))()
+end)
+
+if not success then
+    PercentLabel.Text = "Ошибка загрузки!"
+    PercentLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+    wait(2)
+end
+
 local TweenService = game:GetService("TweenService")
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
