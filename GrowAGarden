@@ -135,7 +135,7 @@ local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(0.6,0,0.05,0)
 SubTitle.Position = UDim2.new(0.2,0,0.63,0)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Загрузка скрипта Grow A Garden"
+SubTitle.Text = "Загрузка скрипта Grow A Garden."
 SubTitle.TextColor3 = Color3.fromRGB(255,255,255)
 SubTitle.Font = Enum.Font.GothamSemibold
 SubTitle.TextSize = 18
@@ -143,29 +143,25 @@ SubTitle.TextStrokeTransparency = 0.5
 SubTitle.TextStrokeColor3 = Color3.fromRGB(0,0,0)
 SubTitle.Parent = Background
 
--- Переменная для точек загрузки
-local dotCount = 0
-local lastDotUpdate = tick()
-
--- Функция для обновления точек
-local function updateDots()
-    local currentTime = tick()
-    if currentTime - lastDotUpdate >= 0.5 then
-        lastDotUpdate = currentTime
-        dotCount = (dotCount % 3) + 1
-        local dots = string.rep(".", dotCount)
-        SubTitle.Text = "Загрузка скрипта Grow A Garden" .. dots
-    end
-end
-
 -- Yavaş ama hafif hızlı yüklenme animasyonu (1.5 dakika)
 local progress = 0
 local startTime = tick()
 local totalDuration = 90 -- 1.5 минуты в секундах
+local dotCount = 1
+local lastDotUpdate = 0
 
 while progress < 100 do
-    -- Обновляем точки загрузки
-    updateDots()
+    -- Обновляем точки загрузки каждые 0.5 секунды
+    if tick() - lastDotUpdate >= 0.5 then
+        lastDotUpdate = tick()
+        dotCount = dotCount + 1
+        if dotCount > 3 then
+            dotCount = 1
+        end
+        
+        local dots = string.rep(".", dotCount)
+        SubTitle.Text = "Загрузка скрипта Grow A Garden" .. dots
+    end
     
     -- Рассчитываем прогресс на основе времени
     local elapsedTime = tick() - startTime
